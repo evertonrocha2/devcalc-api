@@ -1,17 +1,14 @@
 name: CI/CD Pipeline
 
-# Gatilhos do workflow
 on:
-  # Executa em push na branch main
   push:
     branches:
       - main
     paths:
       - 'src/**'
       - 'pom.xml'
-      - '.github/workflows/ci.yml'
+      - '.github/workflows/**'
   
-  # Executa em pull requests que modifiquem arquivos em src/
   pull_request:
     branches:
       - main
@@ -19,7 +16,6 @@ on:
       - 'src/**'
       - 'pom.xml'
   
-  # Permite execução manual
   workflow_dispatch:
     inputs:
       environment:
@@ -31,9 +27,18 @@ on:
           - development
           - staging
           - production
+      run_tests:
+        description: 'Executar testes automatizados'
+        required: false
+        type: boolean
+        default: true
+      run_lint:
+        description: 'Executar análise de código (lint)'
+        required: false
+        type: boolean
+        default: true
 
 jobs:
-  # Job 1: Checkout do código
   checkout:
     name: Checkout Code
     runs-on: ubuntu-latest
@@ -55,7 +60,43 @@ jobs:
           path: .
           retention-days: 1
 
-  # Job 2: Build da aplicação
+  lint-and-test:
+    name: Lint and Test (Reusable)
+    uses: ./.github/workflows/lint-and-test.yml
+    needs: checkout
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_tests || inputs.run_lint }}
+    with:
+      java-version: '11'
+      run-lint: ${{ github.event_name != 'workflow_dispatch' || inputs.run_lint }}
+      run-tests: ${{ github.event_name != 'workflow_dispatch' || inputs.run_tests }}
+
+  code-quality:
+    name: Code Quality Check with Marketplace Action
+    runs-on: ubuntu-latest
+    needs: checkout
+    if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_lint }}
+    
+    steps:
+      - name: Download do código fonte
+        uses: actions/download-artifact@v4
+        with:
+          name: source-code
+      
+      - name: Configurar Java 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'maven'
+      
+      - name: Executar Checkstyle
+        run: mvn checkstyle:checkstyle
+      
+      - name: Checkstyle Report Action (Marketplace)
+        uses: jwgmeligmeyling/checkstyle-github-action@v1.2
+        with:
+          path: '**/checkstyle-result.xml'
+
   build:
     name: Build Application
     runs-on: ubuntu-latest
@@ -89,44 +130,10 @@ jobs:
           path: target/
           retention-days: 5
 
-  # Job 3: Executar testes automatizados
-  test:
-    name: Run Tests
-    runs-on: ubuntu-latest
-    needs: checkout
-    
-    steps:
-      - name: Download do código fonte
-        uses: actions/download-artifact@v4
-        with:
-          name: source-code
-      
-      - name: Configurar Java 11
-        uses: actions/setup-java@v4
-        with:
-          distribution: 'temurin'
-          java-version: '11'
-          cache: 'maven'
-      
-      - name: Executar testes
-        run: mvn test
-      
-      - name: Gerar relatório de cobertura
-        run: mvn verify
-      
-      - name: Upload dos resultados dos testes
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: test-results
-          path: target/surefire-reports/
-          retention-days: 7
-
-  # Job 4: Empacotar aplicação
   package:
     name: Package Application
     runs-on: ubuntu-latest
-    needs: [build, test]
+    needs: [build, lint-and-test]
     
     steps:
       - name: Download do código fonte
@@ -154,11 +161,10 @@ jobs:
           path: target/devcalc-api.jar
           retention-days: 30
 
-  # Job 5: Deploy (simulação)
   deploy:
     name: Deploy Application
     runs-on: ubuntu-latest
-    needs: [build, test, package]
+    needs: [build, lint-and-test, package]
     
     steps:
       - name: Download do JAR
@@ -182,7 +188,7 @@ jobs:
       
       - name: Resumo do deploy
         run: |
-          echo "###Deploy Concluído com Sucesso!" >> $GITHUB_STEP_SUMMARY
+          echo "### Deploy Concluído com Sucesso!" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
           echo "- **Ambiente:** ${{ github.event.inputs.environment || 'main' }}" >> $GITHUB_STEP_SUMMARY
           echo "- **Versão:** 1.0.0" >> $GITHUB_STEP_SUMMARY

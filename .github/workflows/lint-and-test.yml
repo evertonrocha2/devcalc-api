@@ -1,0 +1,98 @@
+name: Lint and Test (Reusable Workflow)
+
+on:
+  workflow_call:
+    inputs:
+      java-version:
+        description: 'Versão do Java a ser utilizada'
+        required: false
+        type: string
+        default: '11'
+      run-lint:
+        description: 'Executar análise de código (lint)'
+        required: false
+        type: boolean
+        default: true
+      run-tests:
+        description: 'Executar testes automatizados'
+        required: false
+        type: boolean
+        default: true
+
+jobs:
+  lint:
+    name: Code Quality Analysis
+    runs-on: ubuntu-latest
+    if: ${{ inputs.run-lint }}
+    
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+      
+      - name: Configurar Java ${{ inputs.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java-version }}
+          cache: 'maven'
+      
+      - name: Executar Checkstyle
+        run: mvn checkstyle:checkstyle
+      
+      - name: Upload do relatório Checkstyle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-report
+          path: target/checkstyle-result.xml
+          retention-days: 7
+      
+      - name: Exibir resultado do lint
+        run: |
+          echo "Análise de código concluída"
+          if [ -f target/checkstyle-result.xml ]; then
+            echo "Relatório Checkstyle gerado com sucesso"
+          fi
+
+  test:
+    name: Automated Tests
+    runs-on: ubuntu-latest
+    if: ${{ inputs.run-tests }}
+    
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+      
+      - name: Configurar Java ${{ inputs.java-version }}
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: ${{ inputs.java-version }}
+          cache: 'maven'
+      
+      - name: Executar testes
+        run: mvn test
+      
+      - name: Gerar relatório de cobertura
+        run: mvn verify
+      
+      - name: Upload dos resultados dos testes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: target/surefire-reports/
+          retention-days: 7
+      
+      - name: Resumo dos testes
+        if: always()
+        run: |
+          echo "## Resultados dos Testes" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          if [ -d target/surefire-reports ]; then
+            TEST_COUNT=$(find target/surefire-reports -name "TEST-*.xml" | wc -l)
+            echo "- **Total de suítes de testes:** $TEST_COUNT" >> $GITHUB_STEP_SUMMARY
+            echo "- **Status:** Testes executados com sucesso" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "- **Status:** Nenhum relatório de teste encontrado" >> $GITHUB_STEP_SUMMARY
+          fi

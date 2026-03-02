@@ -1,0 +1,23 @@
+name: Test Error Pipeline
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/test-error.yml'
+
+jobs:
+  test-intentional-error:
+    name: Pipeline com Erro Intencional
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout do repositório
+        uses: actions/checkout@v4
+      
+      - name: Comando inválido que vai falhar
+        run: comando_invalido_inexistente
+      
+      - name: Este step não será executado
+        run: echo "Este step não será alcançado devido ao erro anterior"

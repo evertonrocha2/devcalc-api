@@ -109,7 +109,11 @@ Criamos um workflow `test-error.yml` com um comando inválido:
 5. Exit code 127 indicou comando não encontrado
 
 **Correção:**
-Removemos o comando inválido e substituímos por um comando válido ou removemos o workflow de teste após documentar o processo.
+Após identificar o erro através dos logs do GitHub Actions, corrigimos o problema substituindo o comando inválido `comando_inexistente_maven_build` pelo comando correto `mvn clean install -DskipTests`. O pipeline voltou a funcionar normalmente após o commit da correção.
+
+**Evidências:**
+- `evidencias/pipeline-sucesso-tp2.png` - Pipeline executando com sucesso
+- `evidencias/pipeline-erro-tp2.png` - Pipeline com erro proposital identificado
 
 ## Comparação: Execução Automática vs Manual
 

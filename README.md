@@ -1,5 +1,7 @@
 # DevCalc API
 
+![CI/CD Pipeline](https://github.com/evertonrocha2/ci-cd/actions/workflows/ci.yml/badge.svg)
+
 ## Objetivo do Projeto
 
 Este projeto tem como objetivo:
@@ -153,6 +155,39 @@ Após realizar execuções de ambos os tipos, observamos:
 **Exemplo de Uso:**
 - **Push automático:** Desenvolvedor faz commit → Pipeline valida tudo automaticamente
 - **Execução manual:** Antes de merge, rodar só os testes sem rebuild completo para economizar tempo
+
+### Análise Prática das Diferenças
+
+Após realizar múltiplas execuções do pipeline por ambos os métodos, observamos diferenças importantes:
+
+**Execução Automática (Push):**
+- Acionada automaticamente ao fazer `git push` para a branch main
+- Executa TODOS os jobs configurados sem possibilidade de personalização
+- Ideal para validação contínua durante o desenvolvimento
+- Gatilho visível nos logs como "push" event
+- Não permite controle granular sobre quais verificações executar
+
+**Execução Manual (workflow_dispatch):**
+- Acionada manualmente através do botão "Run workflow" na interface do GitHub
+- Permite escolher branch específica para executar
+- Oferece parâmetros configuráveis (run_tests, run_lint, environment)
+- Execução condicional: apenas os jobs selecionados são executados
+- Identificada nos logs como "Manually run by [usuario]"
+- Ideal para testes específicos, troubleshooting ou deploys controlados
+- Economiza tempo de execução quando apenas parte da validação é necessária
+
+**Casos de Uso Práticos:**
+- **Push automático:** Validação contínua durante desenvolvimento normal
+- **Execução manual apenas lint:** Verificar código antes de commit final
+- **Execução manual apenas tests:** Re-executar testes após correção específica
+- **Execução manual para production:** Deploy controlado com validação completa
+
+**Evidências:**
+- `evidencias/pipeline-sucesso-tp2.png` - Pipeline executando por push com sucesso
+- `evidencias/pipeline-erro-tp2.png` - Pipeline com erro proposital para debugging
+- `evidencias/execucao-manual-formulario.png` - Interface de execução manual com parâmetros
+- `evidencias/execucao-manual-lista.png` - Lista mostrando "Manually run by evertonrocha2"
+- `evidencias/execucao-manual-pipeline.png` - Pipeline executando manualmente
 
 ## Novidades do TP2
 

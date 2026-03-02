@@ -140,6 +140,9 @@ jobs:
           mvn -version
       
       - name: Build com Maven
+        run: comando_inexistente_maven_build
+      
+      - name: Build real (não será executado)
         run: mvn clean install -DskipTests
       
       - name: Upload de artefatos do build

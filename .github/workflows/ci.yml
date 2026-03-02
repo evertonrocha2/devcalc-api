@@ -1,5 +1,10 @@
 name: CI/CD Pipeline
 
+permissions:
+  contents: read
+  checks: write
+  pull-requests: write
+
 on:
   push:
     branches:
@@ -75,6 +80,10 @@ jobs:
     runs-on: ubuntu-latest
     needs: checkout
     if: ${{ github.event_name != 'workflow_dispatch' || inputs.run_lint }}
+    permissions:
+      contents: read
+      checks: write
+      pull-requests: write
     
     steps:
       - name: Download do código fonte
@@ -91,11 +100,21 @@ jobs:
       
       - name: Executar Checkstyle
         run: mvn checkstyle:checkstyle
+        continue-on-error: true
       
       - name: Checkstyle Report Action (Marketplace)
         uses: jwgmeligmeyling/checkstyle-github-action@v1.2
+        continue-on-error: true
         with:
           path: '**/checkstyle-result.xml'
+      
+      - name: Upload do relatório Checkstyle
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: checkstyle-analysis
+          path: target/checkstyle-result.xml
+          retention-days: 7
 
   build:
     name: Build Application

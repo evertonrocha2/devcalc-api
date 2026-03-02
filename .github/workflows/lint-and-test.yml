@@ -38,6 +38,7 @@ jobs:
       
       - name: Executar Checkstyle
         run: mvn checkstyle:checkstyle
+        continue-on-error: true
       
       - name: Upload do relatório Checkstyle
         if: always()

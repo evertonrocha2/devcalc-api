@@ -10,7 +10,7 @@ import io.javalin.http.Context;
  */
 public class App {
 
-    private static final CalculatorService calculatorService = new CalculatorService();
+    private static final CalculatorService CALCULATOR_SERVICE = new CalculatorService();
 
     public static void main(String[] args) {
         Javalin app = createApp();
@@ -34,22 +34,22 @@ public class App {
 
         // Endpoint de adição
         app.get("/add", ctx -> {
-            handleOperation(ctx, (a, b) -> calculatorService.add(a, b));
+            handleOperation(ctx, (a, b) -> CALCULATOR_SERVICE.add(a, b));
         });
 
         // Endpoint de subtração
         app.get("/subtract", ctx -> {
-            handleOperation(ctx, (a, b) -> calculatorService.subtract(a, b));
+            handleOperation(ctx, (a, b) -> CALCULATOR_SERVICE.subtract(a, b));
         });
 
         // Endpoint de multiplicação
         app.get("/multiply", ctx -> {
-            handleOperation(ctx, (a, b) -> calculatorService.multiply(a, b));
+            handleOperation(ctx, (a, b) -> CALCULATOR_SERVICE.multiply(a, b));
         });
 
         // Endpoint de divisão
         app.get("/divide", ctx -> {
-            handleOperation(ctx, (a, b) -> calculatorService.divide(a, b));
+            handleOperation(ctx, (a, b) -> CALCULATOR_SERVICE.divide(a, b));
         });
 
         // Handler de exceções
@@ -100,11 +100,11 @@ public class App {
      * Classe para resposta de operação bem-sucedida.
      */
     private static class OperationResponse {
-        public final double a;
-        public final double b;
-        public final double result;
+        final double a;
+        final double b;
+        final double result;
 
-        public OperationResponse(double a, double b, double result) {
+        OperationResponse(double a, double b, double result) {
             this.a = a;
             this.b = b;
             this.result = result;
@@ -115,10 +115,10 @@ public class App {
      * Classe para resposta genérica.
      */
     private static class Response {
-        public final String message;
-        public final String info;
+        final String message;
+        final String info;
 
-        public Response(String message, String info) {
+        Response(String message, String info) {
             this.message = message;
             this.info = info;
         }
@@ -128,9 +128,9 @@ public class App {
      * Classe para resposta de erro.
      */
     private static class ErrorResponse {
-        public final String error;
+        final String error;
 
-        public ErrorResponse(String error) {
+        ErrorResponse(String error) {
             this.error = error;
         }
     }

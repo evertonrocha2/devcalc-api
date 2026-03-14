@@ -1,0 +1,115 @@
+name: Demonstração de Permissões e GITHUB_TOKEN
+
+on:
+  workflow_dispatch:
+    inputs:
+      criar_issue:
+        description: 'Criar issue de teste?'
+        required: false
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  testar-permissoes:
+    name: Testar Permissões do Token
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+      
+      - name: Verificar permissões do token
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "Token disponivel"
+          echo "Permissoes:"
+          echo "- contents: read"
+          echo "- issues: write"
+          echo "Token expira ao final do workflow"
+      
+      - name: Criar issue automaticamente
+        if: ${{ inputs.criar_issue == true || github.event_name == 'push' }}
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Auto] Issue criada pelo workflow - ${new Date().toISOString()}`,
+              body: `Issue criada automaticamente pelo workflow.\n\n` +
+                    `**Detalhes:**\n` +
+                    `- Workflow: ${context.workflow}\n` +
+                    `- Run ID: ${context.runId}\n` +
+                    `- Acionado por: @${context.actor}\n` +
+                    `- Branch: ${context.ref}\n` +
+                    `- Commit: ${context.sha.substring(0, 7)}\n\n` +
+                    `Objetivo: Demonstrar uso do GITHUB_TOKEN com permissoes de escrita.`,
+              labels: ['automated', 'tp3']
+            });
+            
+            console.log(`Issue criada: #${issue.data.number}`);
+            console.log(`URL: ${issue.data.html_url}`);
+            
+            core.summary
+              .addHeading('Issue Criada com Sucesso')
+              .addLink(`Issue #${issue.data.number}`, issue.data.html_url)
+              .write();
+      
+      - name: Simular falha condicional e criar issue
+        id: check-deploy
+        continue-on-error: true
+        run: |
+          DEPLOY_STATUS="success"
+          if [ "$DEPLOY_STATUS" = "failed" ]; then
+            echo "Deploy falhou"
+            exit 1
+          fi
+          echo "Deploy bem-sucedido"
+      
+      - name: Criar issue se deploy falhar
+        if: steps.check-deploy.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '[ERRO] Deploy falhou no workflow',
+              body: `Deploy falhou no workflow ${context.workflow}.\n\n` +
+                    `Verificar logs em: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              labels: ['bug', 'deploy', 'automated']
+            });
+      
+      - name: Exemplo de comentário em PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            await github.rest.issues.createComment({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+              body: 'Pipeline executado com sucesso.\n\n' +
+                    'Todas as verificacoes passaram.'
+            });
+      
+      - name: Resumo de permissões
+        run: |
+          echo "## Uso do GITHUB_TOKEN" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Permissoes Configuradas" >> $GITHUB_STEP_SUMMARY
+          echo "- **contents:** read" >> $GITHUB_STEP_SUMMARY
+          echo "- **issues:** write" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Acoes Executadas" >> $GITHUB_STEP_SUMMARY
+          echo "- Verificacao de permissoes" >> $GITHUB_STEP_SUMMARY
+          echo "- Criacao de issue (condicional)" >> $GITHUB_STEP_SUMMARY
+          echo "- Monitoramento de falhas" >> $GITHUB_STEP_SUMMARY

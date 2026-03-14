@@ -1,0 +1,62 @@
+name: Deploy para Desenvolvimento
+
+on:
+  push:
+    branches:
+      - dev
+  workflow_dispatch:
+
+env:
+  ENVIRONMENT: development
+
+jobs:
+  deploy-dev:
+    name: Deploy para Dev
+    runs-on: ubuntu-latest
+    environment:
+      name: dev
+      url: https://dev.devcalc.evertonrocha.dev
+    
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+      
+      - name: Configurar Java 11
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+          cache: 'maven'
+      
+      - name: Build da aplicação
+        run: mvn clean package -DskipTests
+      
+      - name: Executar testes
+        run: mvn test
+      
+      - name: Usar variáveis do ambiente Dev
+        env:
+          APP_MODE: ${{ vars.APP_MODE }}
+          API_URL: ${{ vars.API_URL }}
+        run: |
+          echo "Modo: $APP_MODE"
+          echo "URL: $API_URL"
+          echo "Ambiente: $ENVIRONMENT"
+      
+      - name: Deploy simulado para Dev
+        run: |
+          echo "Versao: 1.0.0-dev"
+          echo "Artefato: devcalc-api.jar"
+          echo "Destino: Servidor DEV"
+          echo "Deploy concluido com sucesso"
+          echo "URL: https://dev.devcalc.evertonrocha.dev"
+      
+      - name: Notificar sucesso
+        run: |
+          echo "## Deploy DEV Concluido" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "- **Ambiente:** Development" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Commit:** ${{ github.sha }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **URL:** https://dev.devcalc.evertonrocha.dev" >> $GITHUB_STEP_SUMMARY
+          echo "- **Status:** Sucesso" >> $GITHUB_STEP_SUMMARY

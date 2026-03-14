@@ -1,0 +1,106 @@
+name: Demonstração de Contextos e Escopos
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/env-context-demo.yml'
+
+env:
+  WORKFLOW_VAR: "Variável no nível de Workflow"
+  STAGE: "test"
+  GLOBAL_CONFIG: "configuracao-global"
+
+jobs:
+  contextos-github:
+    name: Explorar Contextos do GitHub
+    runs-on: ubuntu-latest
+    env:
+      JOB_VAR: "Variável no nível de Job"
+      STAGE: "job-override"
+    
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+      
+      - name: Exibir contexto github
+        run: |
+          echo "Actor: ${{ github.actor }}"
+          echo "Repository: ${{ github.repository }}"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Event: ${{ github.event_name }}"
+          echo "Workflow: ${{ github.workflow }}"
+          echo "Run ID: ${{ github.run_id }}"
+          echo "Run Number: ${{ github.run_number }}"
+      
+      - name: Exibir contexto runner
+        run: |
+          echo "OS: ${{ runner.os }}"
+          echo "Arch: ${{ runner.arch }}"
+          echo "Runner: ${{ runner.name }}"
+          echo "Temp: ${{ runner.temp }}"
+          echo "Tool Cache: ${{ runner.tool_cache }}"
+      
+      - name: Exibir variáveis de ambiente (nível workflow e job)
+        run: |
+          echo "WORKFLOW_VAR: $WORKFLOW_VAR"
+          echo "JOB_VAR: $JOB_VAR"
+          echo "STAGE: $STAGE"
+          echo "GLOBAL_CONFIG: $GLOBAL_CONFIG"
+      
+      - name: Step com variável própria
+        env:
+          STEP_VAR: "Variável no nível de Step"
+          STAGE: "step-override"
+        run: |
+          echo "STEP_VAR: $STEP_VAR"
+          echo "STAGE: $STAGE (sobrescreve job e workflow)"
+          echo "JOB_VAR: $JOB_VAR"
+          echo "WORKFLOW_VAR: $WORKFLOW_VAR"
+      
+      - name: Demonstrar precedência de escopos
+        run: |
+          echo "STAGE: $STAGE"
+          echo "STEP_VAR do step anterior nao existe mais aqui"
+  
+  testar-job-context:
+    name: Testar Contexto de Job
+    runs-on: ubuntu-latest
+    needs: contextos-github
+    env:
+      JOB2_VAR: "Segunda variável de job"
+      STAGE: "production"
+    
+    steps:
+      - name: Variáveis deste job
+        run: |
+          echo "STAGE: $STAGE"
+          echo "JOB2_VAR: $JOB2_VAR"
+          echo "WORKFLOW_VAR: $WORKFLOW_VAR"
+          echo "JOB_VAR (do job anterior): $JOB_VAR"
+      
+      - name: Contexto de dependência
+        run: |
+          echo "=== Informações de Dependência ==="
+          echo "Este job depende de: contextos-github"
+          echo "Status do job anterior: ${{ needs.contextos-github.result }}"
+      
+      - name: Resumo no GitHub Step Summary
+        run: |
+          echo "## Resumo de Contextos e Escopos" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Contexto GitHub" >> $GITHUB_STEP_SUMMARY
+          echo "- **Usuário:** ${{ github.actor }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Sistema:** ${{ runner.os }}" >> $GITHUB_STEP_SUMMARY
+          echo "- **Branch:** ${{ github.ref_name }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Hierarquia de Variáveis" >> $GITHUB_STEP_SUMMARY
+          echo "1. **Workflow:** Acessível em todos os jobs" >> $GITHUB_STEP_SUMMARY
+          echo "2. **Job:** Acessível apenas no job específico" >> $GITHUB_STEP_SUMMARY
+          echo "3. **Step:** Acessível apenas no step específico" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Precedência" >> $GITHUB_STEP_SUMMARY
+          echo "Step > Job > Workflow" >> $GITHUB_STEP_SUMMARY

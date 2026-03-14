@@ -112,4 +112,49 @@ class CalculatorServiceTest {
         double result = calculatorService.divide(-10, 5);
         assertEquals(-2, result, 0.0001);
     }
+
+    @Test
+    @DisplayName("Deve calcular raiz quadrada de números positivos corretamente")
+    void testSqrtPositiveNumbers() {
+        double result = calculatorService.sqrt(16);
+        assertEquals(4, result, 0.0001);
+    }
+
+    @Test
+    @DisplayName("Deve calcular raiz quadrada de 0 corretamente")
+    void testSqrtZero() {
+        double result = calculatorService.sqrt(0);
+        assertEquals(0, result, 0.0001);
+    }
+
+    @Test
+    @DisplayName("Deve calcular raiz quadrada de 1 corretamente")
+    void testSqrtOne() {
+        double result = calculatorService.sqrt(1);
+        assertEquals(1, result, 0.0001);
+    }
+
+    @Test
+    @DisplayName("Deve calcular raiz quadrada de números decimais corretamente")
+    void testSqrtDecimalNumbers() {
+        double result = calculatorService.sqrt(2.25);
+        assertEquals(1.5, result, 0.0001);
+    }
+
+    @Test
+    @DisplayName("Deve calcular raiz quadrada de 100 corretamente")
+    void testSqrt100() {
+        double result = calculatorService.sqrt(100);
+        assertEquals(10, result, 0.0001);
+    }
+
+    @Test
+    @DisplayName("Deve lançar exceção ao calcular raiz quadrada de número negativo")
+    void testSqrtNegativeNumber() {
+        Exception exception = assertThrows(IllegalArgumentException.class, () -> {
+            calculatorService.sqrt(-4);
+        });
+        
+        assertEquals("Não é possível calcular raiz quadrada de número negativo", exception.getMessage());
+    }
 }

@@ -29,7 +29,7 @@ public class App {
         // Endpoint raiz
         app.get("/", ctx -> {
             ctx.json(new Response("DevCalc API está funcionando!", 
-                "Use os endpoints: /add, /subtract, /multiply, /divide com parâmetros a e b"));
+                "Use os endpoints: /add, /subtract, /multiply, /divide (a,b) e /sqrt (x)"));
         });
 
         // Endpoint de adição
@@ -50,6 +50,11 @@ public class App {
         // Endpoint de divisão
         app.get("/divide", ctx -> {
             handleOperation(ctx, (a, b) -> CALCULATOR_SERVICE.divide(a, b));
+        });
+
+        // Endpoint de raiz quadrada
+        app.get("/sqrt", ctx -> {
+            handleSingleOperation(ctx, x -> CALCULATOR_SERVICE.sqrt(x));
         });
 
         // Handler de exceções
@@ -89,7 +94,32 @@ public class App {
     }
 
     /**
-     * Interface funcional para operações matemáticas.
+     * Processa uma operação matemática com um único parâmetro.
+     */
+    private static void handleSingleOperation(Context ctx, SingleOperation operation) {
+        try {
+            String xParam = ctx.queryParam("x");
+
+            if (xParam == null) {
+                ctx.status(400);
+                ctx.json(new ErrorResponse("Parâmetro 'x' é obrigatório"));
+                return;
+            }
+
+            double x = Double.parseDouble(xParam);
+            double result = operation.execute(x);
+
+            ctx.json(new SingleOperationResponse(x, result));
+        } catch (NumberFormatException e) {
+            ctx.status(400);
+            ctx.json(new ErrorResponse("Parâmetro deve ser um número válido"));
+        } catch (IllegalArgumentException e) {
+            throw e;
+        }
+    }
+
+    /**
+     * Interface funcional para operações matemáticas com dois parâmetros.
      */
     @FunctionalInterface
     private interface Operation {
@@ -97,7 +127,15 @@ public class App {
     }
 
     /**
-     * Classe para resposta de operação bem-sucedida.
+     * Interface funcional para operações matemáticas com um parâmetro.
+     */
+    @FunctionalInterface
+    private interface SingleOperation {
+        double execute(double x);
+    }
+
+    /**
+     * Classe para resposta de operação bem-sucedida com dois parâmetros.
      */
     private static class OperationResponse {
         final double a;
@@ -107,6 +145,19 @@ public class App {
         OperationResponse(double a, double b, double result) {
             this.a = a;
             this.b = b;
+            this.result = result;
+        }
+    }
+
+    /**
+     * Classe para resposta de operação com um parâmetro.
+     */
+    private static class SingleOperationResponse {
+        final double x;
+        final double result;
+
+        SingleOperationResponse(double x, double result) {
+            this.x = x;
             this.result = result;
         }
     }

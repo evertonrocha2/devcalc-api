@@ -1,0 +1,57 @@
+name: Runner Auto-Hospedado Demo
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/runner-auto-hospedado.yml'
+
+jobs:
+  test-self-hosted:
+    name: Teste em Runner Local
+    runs-on: self-hosted
+    
+    steps:
+      - name: Checkout do código
+        uses: actions/checkout@v4
+      
+      - name: Informações do sistema
+        run: |
+          echo "=== Sistema Operacional ==="
+          uname -a
+          echo ""
+          echo "=== Hardware ==="
+          echo "CPU: $(nproc) cores"
+          echo "RAM: $(free -h | grep Mem | awk '{print $2}')"
+          echo ""
+          echo "=== Runner ==="
+          echo "Nome: $RUNNER_NAME"
+          echo "Sistema: $RUNNER_OS"
+          echo "Arquitetura: $RUNNER_ARCH"
+      
+      - name: Verificar Java instalado
+        run: |
+          java -version
+          echo "JAVA_HOME: $JAVA_HOME"
+      
+      - name: Instalar software adicional
+        run: |
+          echo "Exemplo de instalação:"
+          echo "Linux: sudo apt-get install -y curl wget"
+          echo "macOS: brew install wget"
+          echo "Windows: choco install wget -y"
+      
+      - name: Executar comando customizado
+        run: |
+          echo "Executando em runner auto-hospedado"
+          echo "Branch: ${{ github.ref_name }}"
+          echo "Commit: ${{ github.sha }}"
+          echo "Acionado por: ${{ github.actor }}"
+      
+      - name: Verificar espaço em disco
+        run: df -h
+      
+      - name: Listar processos
+        run: ps aux | head -20

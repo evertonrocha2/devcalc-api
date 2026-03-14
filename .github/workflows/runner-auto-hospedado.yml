@@ -11,7 +11,7 @@ on:
 jobs:
   test-self-hosted:
     name: Teste em Runner Local
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     
     steps:
       - name: Checkout do código

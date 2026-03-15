@@ -1,6 +1,6 @@
 # DevCalc API
 
-![CI/CD Pipeline](https://github.com/evertonrocha2/ci-cd/actions/workflows/ci.yml/badge.svg)
+![CI/CD Pipeline](https://github.com/evertonrocha2/devcalc-api/actions/workflows/ci.yml/badge.svg)
 
 API REST desenvolvida em Java para operações matemáticas simples, criada para demonstrar práticas de CI/CD com GitHub Actions.
 
@@ -355,8 +355,8 @@ curl "http://localhost:7000/sqrt?x=-4"
 ### Executar localmente
 ```bash
 # Clone o repositório
-git clone https://github.com/evertonrocha2/ci-cd.git
-cd ci-cd
+git clone https://github.com/evertonrocha2/devcalc-api.git
+cd devcalc-api
 
 # Compile e execute testes
 mvn clean install

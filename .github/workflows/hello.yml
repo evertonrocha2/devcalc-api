@@ -1,27 +1,18 @@
-name: Hello Pipeline
+name: Hello CI/CD
 
-# Gatilhos do workflow
 on:
-  # Executa em push na branch main
   push:
-    branches:
-      - main
-  
-  # Executa em pull requests
-  pull_request:
-    branches:
-      - main
 
 jobs:
   hello:
     name: Hello Job
     runs-on: ubuntu-latest
-    
+
     steps:
-      - name: Exibir mensagem de sucesso
-        run: echo "Pipeline iniciado com sucesso"
-      
-      - name: Mostrar informações do evento
+      - name: Exibir Hello CI/CD
+        run: echo "Hello CI/CD"
+
+      - name: Mostrar informacoes do evento
         run: |
           echo "Evento: ${{ github.event_name }}"
           echo "Branch: ${{ github.ref_name }}"

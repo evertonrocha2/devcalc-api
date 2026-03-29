@@ -148,9 +148,15 @@ public class App {
             this.result = result;
         }
 
-        public double getA() { return a; }
-        public double getB() { return b; }
-        public double getResult() { return result; }
+        public double getA() {
+            return a;
+        }
+        public double getB() {
+            return b;
+        }
+        public double getResult() {
+            return result;
+        }
     }
 
     /**
@@ -165,8 +171,12 @@ public class App {
             this.result = result;
         }
 
-        public double getX() { return x; }
-        public double getResult() { return result; }
+        public double getX() {
+            return x;
+        }
+        public double getResult() {
+            return result;
+        }
     }
 
     /**
@@ -181,8 +191,12 @@ public class App {
             this.info = info;
         }
 
-        public String getMessage() { return message; }
-        public String getInfo() { return info; }
+        public String getMessage() {
+            return message;
+        }
+        public String getInfo() {
+            return info;
+        }
     }
 
     /**
@@ -195,6 +209,8 @@ public class App {
             this.error = error;
         }
 
-        public String getError() { return error; }
+        public String getError() {
+            return error;
+        }
     }
 }
